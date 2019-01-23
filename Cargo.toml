@@ -10,3 +10,6 @@ description = "Simple SSH utility module"
 [dependencies]
 serde = "1.0"
 subprocess = "0.1"
+
+[dev-dependencies]
+serde_test = "1.0"

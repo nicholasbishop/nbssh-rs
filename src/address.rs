@@ -66,6 +66,17 @@ impl<'de> de::Visitor<'de> for AddressVisitor {
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         formatter.write_str("host[:port]")
     }
+
+    fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+    where
+        E: de::Error,
+    {
+        match Address::parse(value) {
+            Ok(addr) => Ok(addr),
+            Err(AddressError::InvalidFormat) => Err(E::custom("invalid address format")),
+            Err(AddressError::InvalidPort) => Err(E::custom("invalid port number")),
+        }
+    }
 }
 
 impl<'de> Deserialize<'de> for Address {
@@ -95,13 +106,17 @@ impl Display for Address {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_test::{assert_tokens, Token};
 
     #[test]
     fn test_parse() {
         assert_eq!(Address::parse("a"), Ok(Address::new("a", 22)));
         assert_eq!(Address::parse("a:1234"), Ok(Address::new("a", 1234)));
         assert_eq!(Address::parse("a:b"), Err(AddressError::InvalidPort));
-        assert_eq!(Address::parse("a:1234:5678"), Err(AddressError::InvalidFormat));
+        assert_eq!(
+            Address::parse("a:1234:5678"),
+            Err(AddressError::InvalidFormat)
+        );
     }
 
     #[test]
@@ -126,5 +141,11 @@ mod tests {
     fn test_display() {
         let addr = Address::new("abc", 22);
         assert_eq!(format!("{}", addr), "abc:22");
+    }
+
+    #[test]
+    fn test_ser_de() {
+        let addr = Address::new("abc", 22);
+        assert_tokens(&addr, &[Token::Str("abc:22")]);
     }
 }
