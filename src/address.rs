@@ -32,6 +32,18 @@ impl Address {
         }
     }
 
+    pub fn parse_vec(addresses: &[String]) -> Option<Vec<Address>> {
+        let mut result = Vec::new();
+        for elem in addresses {
+            if let Some(addr) = Address::parse(elem) {
+                result.push(addr);
+            } else {
+                return None;
+            }
+        }
+        Some(result)
+    }
+
     pub fn port_str(&self) -> String {
         self.port.to_string()
     }
@@ -85,6 +97,19 @@ mod tests {
         assert_eq!(Address::parse("a:1234").unwrap(), Address::new("a", 1234));
         assert!(Address::parse("a:b").is_none());
         assert!(Address::parse("a:1234:5678").is_none());
+    }
+
+    #[test]
+    fn test_parse_vec() {
+        assert_eq!(
+            Address::parse_vec(&["a".to_string(), "b:9222".to_string()]),
+            Some(vec![Address::new("a", 22), Address::new("b", 9222)])
+        );
+
+        assert_eq!(
+            Address::parse_vec(&["a".to_string(), "b:abcd".to_string()]),
+            None
+        );
     }
 
     #[test]
