@@ -9,6 +9,12 @@ pub struct Address {
     pub port: u16,
 }
 
+#[derive(Debug, Eq, PartialEq)]
+pub enum AddressError {
+    InvalidFormat,
+    InvalidPort,
+}
+
 impl Address {
     pub fn new(host: &str, port: u16) -> Address {
         Address {
@@ -17,31 +23,30 @@ impl Address {
         }
     }
 
-    pub fn parse(address: &str) -> Option<Address> {
+    pub fn parse(address: &str) -> Result<Address, AddressError> {
         let parts: Vec<&str> = address.split(':').collect();
         if parts.len() == 2 {
             if let Ok(port) = parts[1].parse() {
-                Some(Address::new(parts[0], port))
+                Ok(Address::new(parts[0], port))
             } else {
-                None
+                Err(AddressError::InvalidPort)
             }
         } else if parts.len() == 1 {
-            Some(Address::new(address, 22))
+            Ok(Address::new(address, 22))
         } else {
-            None
+            Err(AddressError::InvalidFormat)
         }
     }
 
-    pub fn parse_vec(addresses: &[String]) -> Option<Vec<Address>> {
+    pub fn parse_vec(addresses: &[String]) -> Result<Vec<Address>, AddressError> {
         let mut result = Vec::new();
         for elem in addresses {
-            if let Some(addr) = Address::parse(elem) {
-                result.push(addr);
-            } else {
-                return None;
+            match Address::parse(elem) {
+                Ok(addr) => result.push(addr),
+                Err(err) => return Err(err),
             }
         }
-        Some(result)
+        Ok(result)
     }
 
     pub fn port_str(&self) -> String {
@@ -93,22 +98,22 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        assert_eq!(Address::parse("a").unwrap(), Address::new("a", 22));
-        assert_eq!(Address::parse("a:1234").unwrap(), Address::new("a", 1234));
-        assert!(Address::parse("a:b").is_none());
-        assert!(Address::parse("a:1234:5678").is_none());
+        assert_eq!(Address::parse("a"), Ok(Address::new("a", 22)));
+        assert_eq!(Address::parse("a:1234"), Ok(Address::new("a", 1234)));
+        assert_eq!(Address::parse("a:b"), Err(AddressError::InvalidPort));
+        assert_eq!(Address::parse("a:1234:5678"), Err(AddressError::InvalidFormat));
     }
 
     #[test]
     fn test_parse_vec() {
         assert_eq!(
             Address::parse_vec(&["a".to_string(), "b:9222".to_string()]),
-            Some(vec![Address::new("a", 22), Address::new("b", 9222)])
+            Ok(vec![Address::new("a", 22), Address::new("b", 9222)])
         );
 
         assert_eq!(
             Address::parse_vec(&["a".to_string(), "b:abcd".to_string()]),
-            None
+            Err(AddressError::InvalidPort)
         );
     }
 
