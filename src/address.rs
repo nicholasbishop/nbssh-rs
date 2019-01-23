@@ -1,4 +1,4 @@
-use serde::de::Visitor;
+use serde::de;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
 use std::fmt::Display;
@@ -55,7 +55,7 @@ impl Address {
 
 struct AddressVisitor;
 
-impl<'de> Visitor<'de> for AddressVisitor {
+impl<'de> de::Visitor<'de> for AddressVisitor {
     type Value = Address;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
