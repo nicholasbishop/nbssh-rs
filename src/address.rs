@@ -1,15 +1,16 @@
-use serde::{Serialize, Deserialize};
+use serde::de;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
 
-#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Address {
     pub host: String,
     pub port: u16,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum AddressError {
     InvalidFormat,
     InvalidPort,
@@ -73,6 +74,45 @@ impl Address {
     }
 }
 
+struct AddressVisitor;
+
+impl<'de> de::Visitor<'de> for AddressVisitor {
+    type Value = Address;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("host[:port]")
+    }
+
+    fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+    where
+        E: de::Error,
+    {
+        match Address::parse(value) {
+            Ok(addr) => Ok(addr),
+            Err(AddressError::InvalidFormat) => Err(E::custom("invalid address format")),
+            Err(AddressError::InvalidPort) => Err(E::custom("invalid port number")),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for Address {
+    fn deserialize<D>(deserializer: D) -> Result<Address, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        deserializer.deserialize_str(AddressVisitor)
+    }
+}
+
+impl Serialize for Address {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
+    }
+}
+
 impl Display for Address {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.to_string())
@@ -82,6 +122,7 @@ impl Display for Address {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_test::{assert_tokens, Token};
 
     #[test]
     fn test_parse() {
@@ -119,6 +160,12 @@ mod tests {
         assert_eq!(format!("{}", addr), "abc");
         let addr = Address::new("abc", 123);
         assert_eq!(format!("{}", addr), "abc:123");
+    }
+
+    #[test]
+    fn test_ser_de() {
+        let addr = Address::new("abc", 22);
+        assert_tokens(&addr, &[Token::Str("abc")]);
     }
 
     #[test]
