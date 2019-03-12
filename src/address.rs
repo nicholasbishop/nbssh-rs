@@ -65,7 +65,11 @@ impl Address {
     }
 
     pub fn to_string(&self) -> String {
-        format!("{}:{}", self.host, self.port)
+        if self.port == 22 {
+            self.host.clone()
+        } else {
+            format!("{}:{}", self.host, self.port)
+        }
     }
 }
 
@@ -105,13 +109,16 @@ mod tests {
 
     #[test]
     fn test_to_string() {
+        assert_eq!(Address::new("abc", 22).to_string(), "abc");
         assert_eq!(Address::new("abc", 123).to_string(), "abc:123");
     }
 
     #[test]
     fn test_display() {
         let addr = Address::new("abc", 22);
-        assert_eq!(format!("{}", addr), "abc:22");
+        assert_eq!(format!("{}", addr), "abc");
+        let addr = Address::new("abc", 123);
+        assert_eq!(format!("{}", addr), "abc:123");
     }
 
     #[test]
