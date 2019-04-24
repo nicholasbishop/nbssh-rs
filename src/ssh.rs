@@ -4,9 +4,9 @@ use std::path::PathBuf;
 
 #[derive(Debug)]
 pub struct SshTarget {
-    address: Address,
-    identity: PathBuf,
-    user: String,
+    pub address: Address,
+    pub identity: PathBuf,
+    pub user: String,
 }
 
 impl SshTarget {
