@@ -7,22 +7,27 @@ pub struct SshTarget {
     pub address: Address,
     pub identity: PathBuf,
     pub user: String,
+    pub strict_host_key_checking: bool,
 }
 
 impl SshTarget {
     pub fn command<S: AsRef<OsStr>>(&self, args: &[S]) -> subprocess::Exec {
-        subprocess::Exec::cmd("ssh")
-            .args(&[
+        let mut cmd = subprocess::Exec::cmd("ssh");
+        if !self.strict_host_key_checking {
+            cmd = cmd.args(&[
                 "-oStrictHostKeyChecking=no",
                 "-oUserKnownHostsFile=/dev/null",
-                "-oBatchMode=yes",
-                "-i",
-                self.identity.to_str().unwrap(),
-                "-p",
-                &self.address.port_str(),
-                &format!("{}@{}", self.user, self.address.host),
-            ])
-            .args(args)
+            ]);
+        }
+        cmd.args(&[
+            "-oBatchMode=yes",
+            "-i",
+            self.identity.to_str().unwrap(),
+            "-p",
+            &self.address.port_str(),
+            &format!("{}@{}", self.user, self.address.host),
+        ])
+        .args(args)
     }
 }
 
@@ -40,6 +45,7 @@ mod tests {
             address,
             identity,
             user: user.into(),
+            strict_host_key_checking: false,
         };
         let cmd = target.command(&["arg1", "arg2"]);
         assert_eq!(cmd.to_cmdline_lossy(), "ssh '-oStrictHostKeyChecking=no' '-oUserKnownHostsFile=/dev/null' '-oBatchMode=yes' -i /myIdentity -p 9222 'me@localhost' arg1 arg2");
