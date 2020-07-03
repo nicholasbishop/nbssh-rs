@@ -170,7 +170,7 @@ mod tests {
 
     #[test]
     fn test_error_trait() {
-        let err: Box<Error> = Box::new(AddressError::InvalidPort);
-        assert!(err.cause().is_none());
+        let err: Box<dyn Error> = Box::new(AddressError::InvalidPort);
+        assert!(err.source().is_none());
     }
 }
