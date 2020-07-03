@@ -66,14 +66,6 @@ impl Address {
     pub fn port_str(&self) -> String {
         self.port.to_string()
     }
-
-    pub fn to_string(&self) -> String {
-        if self.port == 22 {
-            self.host.clone()
-        } else {
-            format!("{}:{}", self.host, self.port)
-        }
-    }
 }
 
 struct AddressVisitor;
@@ -121,7 +113,11 @@ impl Serialize for Address {
 
 impl Display for Address {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.to_string())
+        if self.port == 22 {
+            write!(f, "{}", self.host)
+        } else {
+            write!(f, "{}:{}", self.host, self.port)
+        }
     }
 }
 
@@ -152,12 +148,6 @@ mod tests {
             Address::parse_vec(&["a".to_string(), "b:abcd".to_string()]),
             Err(AddressError::InvalidPort)
         );
-    }
-
-    #[test]
-    fn test_to_string() {
-        assert_eq!(Address::new("abc", 22).to_string(), "abc");
-        assert_eq!(Address::new("abc", 123).to_string(), "abc:123");
     }
 
     #[test]
