@@ -50,7 +50,9 @@ impl Address {
         }
     }
 
-    pub fn parse_vec(addresses: &[String]) -> Result<Vec<Address>, AddressError> {
+    pub fn parse_vec(
+        addresses: &[String],
+    ) -> Result<Vec<Address>, AddressError> {
         let mut result = Vec::new();
         for elem in addresses {
             match Address::parse(elem) {
@@ -89,8 +91,12 @@ impl<'de> de::Visitor<'de> for AddressVisitor {
     {
         match Address::parse(value) {
             Ok(addr) => Ok(addr),
-            Err(AddressError::InvalidFormat) => Err(E::custom("invalid address format")),
-            Err(AddressError::InvalidPort) => Err(E::custom("invalid port number")),
+            Err(AddressError::InvalidFormat) => {
+                Err(E::custom("invalid address format"))
+            }
+            Err(AddressError::InvalidPort) => {
+                Err(E::custom("invalid port number"))
+            }
         }
     }
 }
