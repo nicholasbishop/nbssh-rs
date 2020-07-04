@@ -221,13 +221,10 @@ mod tests {
 
     #[test]
     fn test_command() {
-        let address = Address::parse("localhost:9222").unwrap();
-        let identity = Some(Path::new("/myIdentity").to_path_buf());
-        let user = Some("me".to_string());
         let target = SshParams {
-            address,
-            identity,
-            user,
+            address: Address::parse("localhost:9222").unwrap(),
+            identity: Some(Path::new("/myIdentity").to_path_buf()),
+            user: Some("me".to_string()),
             strict_host_key_checking: false,
         };
         let cmd = target.command(&["arg1", "arg2"]);
