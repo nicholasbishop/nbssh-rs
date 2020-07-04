@@ -2,21 +2,27 @@ use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
 use std::fmt::Display;
 
+/// Host and port number.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Address {
     pub host: String,
     pub port: u16,
 }
 
+/// Address parse errors.
 #[derive(Clone, Debug, Eq, PartialEq, thiserror::Error)]
 pub enum AddressError {
+    /// The address either contains more than one colon or is empty.
     #[error("invalid address format")]
     InvalidFormat,
+
+    /// The port number could not be parsed as a u16.
     #[error("invalid address port")]
     InvalidPort,
 }
 
 impl Address {
+    /// Create a new address.
     pub fn new(host: &str, port: u16) -> Address {
         Address {
             host: host.to_string(),
@@ -24,6 +30,8 @@ impl Address {
         }
     }
 
+    /// Parse an address in "host[:port]" format. If port is not
+    /// given, it defaults to 22.
     pub fn parse(address: &str) -> Result<Address, AddressError> {
         let parts: Vec<&str> = address.split(':').collect();
         if parts.len() == 2 {
@@ -52,6 +60,7 @@ impl Address {
         Ok(result)
     }
 
+    /// Get the port number as a string.
     pub fn port_str(&self) -> String {
         self.port.to_string()
     }
