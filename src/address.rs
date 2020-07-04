@@ -47,19 +47,6 @@ impl Address {
         }
     }
 
-    pub fn parse_vec(
-        addresses: &[String],
-    ) -> Result<Vec<Address>, AddressError> {
-        let mut result = Vec::new();
-        for elem in addresses {
-            match Address::parse(elem) {
-                Ok(addr) => result.push(addr),
-                Err(err) => return Err(err),
-            }
-        }
-        Ok(result)
-    }
-
     /// Get the port number as a string.
     pub fn port_str(&self) -> String {
         self.port.to_string()
@@ -132,19 +119,6 @@ mod tests {
         assert_eq!(
             Address::parse("a:1234:5678"),
             Err(AddressError::InvalidFormat)
-        );
-    }
-
-    #[test]
-    fn test_parse_vec() {
-        assert_eq!(
-            Address::parse_vec(&["a".to_string(), "b:9222".to_string()]),
-            Ok(vec![Address::new("a", 22), Address::new("b", 9222)])
-        );
-
-        assert_eq!(
-            Address::parse_vec(&["a".to_string(), "b:abcd".to_string()]),
-            Err(AddressError::InvalidPort)
         );
     }
 
