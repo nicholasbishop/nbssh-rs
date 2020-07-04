@@ -2,7 +2,7 @@ use crate::address::Address;
 use std::ffi::{OsStr, OsString};
 use std::path::PathBuf;
 
-#[derive(Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SshTarget {
     pub address: Address,
     pub identity: PathBuf,
