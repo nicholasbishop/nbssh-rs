@@ -24,7 +24,7 @@ pub struct SshParams {
     pub strict_host_key_checking: bool,
 }
 
-impl SshTarget {
+impl SshParams {
     /// Create a full SSH command.
     pub fn command<S: AsRef<OsStr>>(&self, args: &[S]) -> Vec<OsString> {
         let mut output: Vec<OsString> = Vec::new();
@@ -60,7 +60,7 @@ mod tests {
         let address = Address::parse("localhost:9222").unwrap();
         let identity = Path::new("/myIdentity").to_path_buf();
         let user = "me";
-        let target = SshTarget {
+        let target = SshParams {
             address,
             identity,
             user: user.into(),
