@@ -1,7 +1,6 @@
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use std::ffi::{OsStr, OsString};
-use std::fmt;
-use std::fmt::Display;
+use std::fmt::{self, Display};
 use std::path::PathBuf;
 
 pub const DEFAULT_SSH_PORT: u16 = 22;
