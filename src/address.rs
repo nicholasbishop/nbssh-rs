@@ -2,6 +2,8 @@ use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
 use std::fmt::Display;
 
+pub const DEFAULT_SSH_PORT: u16 = 22;
+
 /// Host and port number.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Address {
@@ -43,7 +45,7 @@ impl Address {
                 Err(AddressError::InvalidPort)
             }
         } else if parts.len() == 1 {
-            Ok(Address::new(address, 22))
+            Ok(Address::new(address, DEFAULT_SSH_PORT))
         } else {
             Err(AddressError::InvalidFormat)
         }
