@@ -2,15 +2,30 @@ use crate::address::Address;
 use std::ffi::{OsStr, OsString};
 use std::path::PathBuf;
 
+/// Inputs for an SSH command, excluding the remote command itself.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct SshTarget {
+pub struct SshParams {
+    /// Target address.
     pub address: Address,
+
+    /// Identity file ("-i" option).
     pub identity: PathBuf,
+
+    /// Target user name.
     pub user: String,
+
+    /// If false, skip the known-host check and do not add the target
+    /// to the known-hosts file. This is useful, for example, with
+    /// ephemeral VMs.
+    ///
+    /// Setting this to false adds these flags:
+    /// 1. -oStrictHostKeyChecking=no
+    /// 2. -oUserKnownHostsFile=/dev/null
     pub strict_host_key_checking: bool,
 }
 
 impl SshTarget {
+    /// Create a full SSH command.
     pub fn command<S: AsRef<OsStr>>(&self, args: &[S]) -> Vec<OsString> {
         let mut output: Vec<OsString> = Vec::new();
         output.push("ssh".into());
