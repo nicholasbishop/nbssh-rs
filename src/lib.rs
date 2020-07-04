@@ -58,6 +58,15 @@ impl Address {
     }
 }
 
+impl Default for Address {
+    fn default() -> Address {
+        Address {
+            host: String::new(),
+            port: DEFAULT_SSH_PORT,
+        }
+    }
+}
+
 struct AddressVisitor;
 
 impl<'de> de::Visitor<'de> for AddressVisitor {
@@ -131,6 +140,17 @@ pub struct SshParams {
     /// 1. -oStrictHostKeyChecking=no
     /// 2. -oUserKnownHostsFile=/dev/null
     pub strict_host_key_checking: bool,
+}
+
+impl Default for SshParams {
+    fn default() -> SshParams {
+        SshParams {
+            address: Address::default(),
+            identity: None,
+            user: String::new(),
+            strict_host_key_checking: true,
+        }
+    }
 }
 
 impl SshParams {
