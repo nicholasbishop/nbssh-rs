@@ -1,3 +1,19 @@
+#![deny(missing_docs)]
+
+//! SSH utilities.
+//!
+//! ```rust
+//! use nbssh::{Address, SshParams};
+//! use std::process::Command;
+//!
+//! let params = SshParams {
+//!   address: Address::from_host("myHost"),
+//!   ..Default::default()
+//! };
+//! let args = params.command(&["echo", "hello"]);
+//! Command::new(&args[0]).args(&args[1..]).status().unwrap();
+//! ```
+
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use std::ffi::{OsStr, OsString};
 use std::fmt::{self, Display};
