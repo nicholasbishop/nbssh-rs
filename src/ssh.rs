@@ -1,5 +1,5 @@
 use crate::address::Address;
-use std::ffi::OsStr;
+use std::ffi::{OsStr, OsString};
 use std::path::PathBuf;
 
 #[derive(Debug)]
@@ -11,23 +11,27 @@ pub struct SshTarget {
 }
 
 impl SshTarget {
-    pub fn command<S: AsRef<OsStr>>(&self, args: &[S]) -> subprocess::Exec {
-        let mut cmd = subprocess::Exec::cmd("ssh");
+    pub fn command<S: AsRef<OsStr>>(&self, args: &[S]) -> Vec<OsString> {
+        let mut output: Vec<OsString> = Vec::new();
+        output.push("ssh".into());
+
         if !self.strict_host_key_checking {
-            cmd = cmd.args(&[
-                "-oStrictHostKeyChecking=no",
-                "-oUserKnownHostsFile=/dev/null",
+            output.extend_from_slice(&[
+                "-oStrictHostKeyChecking=no".into(),
+                "-oUserKnownHostsFile=/dev/null".into(),
             ]);
         }
-        cmd.args(&[
-            "-oBatchMode=yes",
-            "-i",
-            self.identity.to_str().unwrap(),
-            "-p",
-            &self.address.port_str(),
-            &format!("{}@{}", self.user, self.address.host),
-        ])
-        .args(args)
+        output.extend_from_slice(&[
+            "-oBatchMode=yes".into(),
+            "-i".into(),
+            self.identity.clone().into(),
+            "-p".into(),
+            self.address.port_str().into(),
+            format!("{}@{}", self.user, self.address.host).into(),
+        ]);
+        output.extend(args.iter().map(|arg| arg.into()));
+
+        output
     }
 }
 
@@ -48,6 +52,21 @@ mod tests {
             strict_host_key_checking: false,
         };
         let cmd = target.command(&["arg1", "arg2"]);
-        assert_eq!(cmd.to_cmdline_lossy(), "ssh '-oStrictHostKeyChecking=no' '-oUserKnownHostsFile=/dev/null' '-oBatchMode=yes' -i /myIdentity -p 9222 'me@localhost' arg1 arg2");
+        assert_eq!(
+            cmd,
+            vec![
+                "ssh",
+                "-oStrictHostKeyChecking=no",
+                "-oUserKnownHostsFile=/dev/null",
+                "-oBatchMode=yes",
+                "-i",
+                "/myIdentity",
+                "-p",
+                "9222",
+                "me@localhost",
+                "arg1",
+                "arg2"
+            ]
+        );
     }
 }
