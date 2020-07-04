@@ -1,6 +1,6 @@
 # nbssh
 
-[![Build Status](https://travis-ci.org/nicholasbishop/nbssh-rs.svg?branch=master)](https://travis-ci.org/nicholasbishop/nbssh-rs)
+[![crates.io](https://img.shields.io/crates/v/nbssh.svg)](https://crates.io/crates/nbssh)
 [![Documentation](https://docs.rs/nbssh/badge.svg)](https://docs.rs/nbssh)
 
 SSH command generator. Example usage:
