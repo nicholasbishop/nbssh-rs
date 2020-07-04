@@ -130,7 +130,7 @@ pub struct SshParams {
     pub identity: Option<PathBuf>,
 
     /// Target user name.
-    pub user: String,
+    pub user: Option<String>,
 
     /// If false, skip the known-host check and do not add the target
     /// to the known-hosts file. This is useful, for example, with
@@ -147,7 +147,7 @@ impl Default for SshParams {
         SshParams {
             address: Address::default(),
             identity: None,
-            user: String::new(),
+            user: None,
             strict_host_key_checking: true,
         }
     }
@@ -171,10 +171,16 @@ impl SshParams {
             output.extend_from_slice(&["-i".into(), identity.into()]);
         }
 
+        let target = if let Some(user) = &self.user {
+            format!("{}@{}", user, self.address.host)
+        } else {
+            self.address.host.clone()
+        };
+
         output.extend_from_slice(&[
             "-p".into(),
             self.address.port_str().into(),
-            format!("{}@{}", self.user, self.address.host).into(),
+            target.into(),
         ]);
         output.extend(args.iter().map(|arg| arg.into()));
 
@@ -217,11 +223,11 @@ mod tests {
     fn test_command() {
         let address = Address::parse("localhost:9222").unwrap();
         let identity = Some(Path::new("/myIdentity").to_path_buf());
-        let user = "me";
+        let user = Some("me".to_string());
         let target = SshParams {
             address,
             identity,
-            user: user.into(),
+            user,
             strict_host_key_checking: false,
         };
         let cmd = target.command(&["arg1", "arg2"]);
