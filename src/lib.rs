@@ -117,8 +117,8 @@ pub struct SshParams {
     /// Target address.
     pub address: Address,
 
-    /// Identity file ("-i" option).
-    pub identity: PathBuf,
+    /// Optional identity path ("-i" option).
+    pub identity: Option<PathBuf>,
 
     /// Target user name.
     pub user: String,
@@ -145,10 +145,13 @@ impl SshParams {
                 "-oUserKnownHostsFile=/dev/null".into(),
             ]);
         }
+        output.push("-oBatchMode=yes".into());
+
+        if let Some(identity) = &self.identity {
+            output.extend_from_slice(&["-i".into(), identity.into()]);
+        }
+
         output.extend_from_slice(&[
-            "-oBatchMode=yes".into(),
-            "-i".into(),
-            self.identity.clone().into(),
             "-p".into(),
             self.address.port_str().into(),
             format!("{}@{}", self.user, self.address.host).into(),
@@ -193,7 +196,7 @@ mod tests {
     #[test]
     fn test_command() {
         let address = Address::parse("localhost:9222").unwrap();
-        let identity = Path::new("/myIdentity").to_path_buf();
+        let identity = Some(Path::new("/myIdentity").to_path_buf());
         let user = "me";
         let target = SshParams {
             address,
