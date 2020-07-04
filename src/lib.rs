@@ -1,6 +1,6 @@
 #![deny(missing_docs)]
 
-//! SSH utilities.
+//! SSH command generator. Example usage:
 //!
 //! ```rust
 //! use nbssh::{Address, SshParams};
@@ -22,7 +22,8 @@ use std::path::PathBuf;
 /// Default SSH port number 22.
 pub const DEFAULT_SSH_PORT: u16 = 22;
 
-/// Host and port number.
+/// Host and port number. Can be serialized and deserialized with
+/// serde using the "host[:port]" format.
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct Address {
     /// Host name or IP address.
