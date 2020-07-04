@@ -1,6 +1,4 @@
-use serde::de;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::error::Error;
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
 use std::fmt::Display;
 
@@ -10,22 +8,13 @@ pub struct Address {
     pub port: u16,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, thiserror::Error)]
 pub enum AddressError {
+    #[error("invalid address format")]
     InvalidFormat,
+    #[error("invalid address port")]
     InvalidPort,
 }
-
-impl Display for AddressError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            AddressError::InvalidFormat => write!(f, "invalid address format"),
-            AddressError::InvalidPort => write!(f, "invalid address port"),
-        }
-    }
-}
-
-impl Error for AddressError {}
 
 impl Address {
     pub fn new(host: &str, port: u16) -> Address {
@@ -162,11 +151,5 @@ mod tests {
     fn test_ser_de() {
         let addr = Address::new("abc", 22);
         assert_tokens(&addr, &[Token::Str("abc")]);
-    }
-
-    #[test]
-    fn test_error_trait() {
-        let err: Box<dyn Error> = Box::new(AddressError::InvalidPort);
-        assert!(err.source().is_none());
     }
 }
