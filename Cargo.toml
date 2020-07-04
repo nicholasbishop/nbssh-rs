@@ -6,6 +6,8 @@ edition = "2018"
 repository = "https://github.com/nicholasbishop/nbssh-rs"
 license = "Apache-2.0"
 description = "SSH command generator"
+readme = "README.md"
+keywords = ["ssh"]
 
 [dependencies]
 serde = { version = "1.0", default_features = false }
