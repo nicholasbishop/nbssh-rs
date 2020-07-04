@@ -7,12 +7,12 @@ use std::path::PathBuf;
 pub const DEFAULT_SSH_PORT: u16 = 22;
 
 /// Host and port number.
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct Address {
     /// Host name or IP address.
     pub host: String,
     /// Port number.
-    pub port: u16,
+    pub port: Option<u16>,
 }
 
 /// Address parse errors.
@@ -32,12 +32,19 @@ impl Address {
     pub fn new(host: &str, port: u16) -> Address {
         Address {
             host: host.to_string(),
-            port,
+            port: Some(port),
         }
     }
 
-    /// Parse an address in "host[:port]" format. If port is not
-    /// given, it defaults to 22.
+    /// Create a new address with no port number set.
+    pub fn from_host(host: &str) -> Address {
+        Address {
+            host: host.to_string(),
+            port: None,
+        }
+    }
+
+    /// Parse an address in "host[:port]" format.
     pub fn parse(address: &str) -> Result<Address, AddressError> {
         let parts: Vec<&str> = address.split(':').collect();
         if parts.len() == 2 {
@@ -47,7 +54,7 @@ impl Address {
                 Err(AddressError::InvalidPort)
             }
         } else if parts.len() == 1 {
-            Ok(Address::new(address, DEFAULT_SSH_PORT))
+            Ok(Address::from_host(address))
         } else {
             Err(AddressError::InvalidFormat)
         }
@@ -55,15 +62,10 @@ impl Address {
 
     /// Get the port number as a string.
     pub fn port_str(&self) -> String {
-        self.port.to_string()
-    }
-}
-
-impl Default for Address {
-    fn default() -> Address {
-        Address {
-            host: String::new(),
-            port: DEFAULT_SSH_PORT,
+        if let Some(port) = self.port {
+            port.to_string()
+        } else {
+            String::new()
         }
     }
 }
@@ -113,10 +115,10 @@ impl Serialize for Address {
 
 impl Display for Address {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if self.port == 22 {
-            write!(f, "{}", self.host)
+        if let Some(port) = self.port {
+            write!(f, "{}:{}", self.host, port)
         } else {
-            write!(f, "{}:{}", self.host, self.port)
+            write!(f, "{}", self.host)
         }
     }
 }
@@ -172,17 +174,17 @@ impl SshParams {
             output.extend_from_slice(&["-i".into(), identity.into()]);
         }
 
+        if let Some(port) = self.address.port {
+            output.extend_from_slice(&["-p".into(), port.to_string().into()]);
+        }
+
         let target = if let Some(user) = &self.user {
             format!("{}@{}", user, self.address.host)
         } else {
             self.address.host.clone()
         };
 
-        output.extend_from_slice(&[
-            "-p".into(),
-            self.address.port_str().into(),
-            target.into(),
-        ]);
+        output.push(target.into());
         output.extend(args.iter().map(|arg| arg.into()));
 
         output
@@ -197,7 +199,7 @@ mod tests {
 
     #[test]
     fn test_address_parse() {
-        assert_eq!(Address::parse("a"), Ok(Address::new("a", 22)));
+        assert_eq!(Address::parse("a"), Ok(Address::from_host("a")));
         assert_eq!(Address::parse("a:1234"), Ok(Address::new("a", 1234)));
         assert_eq!(Address::parse("a:b"), Err(AddressError::InvalidPort));
         assert_eq!(
@@ -208,16 +210,16 @@ mod tests {
 
     #[test]
     fn test_address_display() {
-        let addr = Address::new("abc", 22);
+        let addr = Address::from_host("abc");
         assert_eq!(format!("{}", addr), "abc");
         let addr = Address::new("abc", 123);
         assert_eq!(format!("{}", addr), "abc:123");
     }
 
     #[test]
-    fn test_address_deserialize() {
-        let addr = Address::new("abc", 22);
-        assert_tokens(&addr, &[Token::Str("abc")]);
+    fn test_address_tokens() {
+        assert_tokens(&Address::from_host("abc"), &[Token::Str("abc")]);
+        assert_tokens(&Address::new("abc", 123), &[Token::Str("abc:123")]);
     }
 
     #[test]
