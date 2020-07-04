@@ -3,6 +3,7 @@ use std::ffi::{OsStr, OsString};
 use std::fmt::{self, Display};
 use std::path::PathBuf;
 
+/// Default SSH port number 22.
 pub const DEFAULT_SSH_PORT: u16 = 22;
 
 /// Host and port number.
