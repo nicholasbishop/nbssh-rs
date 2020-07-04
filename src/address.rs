@@ -5,7 +5,9 @@ use std::fmt::Display;
 /// Host and port number.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Address {
+    /// Host name or IP address.
     pub host: String,
+    /// Port number.
     pub port: u16,
 }
 
