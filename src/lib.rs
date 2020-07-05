@@ -67,15 +67,28 @@ impl std::str::FromStr for Address {
 
     /// Parse an address in "host[:port]" format.
     fn from_str(address: &str) -> Result<Self, Self::Err> {
-        let parts: Vec<&str> = address.split(':').collect();
-        if parts.len() == 2 {
-            if let Ok(port) = parts[1].parse() {
-                Ok(Address::new(parts[0], port))
-            } else {
-                Err(AddressError::InvalidPort)
+        let mut iter = address.split(':');
+        if let Some(host) = iter.next() {
+            // Reject empty hosts
+            if host.is_empty() {
+                return Err(AddressError::InvalidFormat);
             }
-        } else if parts.len() == 1 {
-            Ok(Address::from_host(address))
+
+            if let Some(port) = iter.next() {
+                // Reject more than two colons
+                if iter.next().is_some() {
+                    return Err(AddressError::InvalidFormat);
+                }
+
+                // Parse the port
+                if let Ok(port) = port.parse() {
+                    Ok(Address::new(host, port))
+                } else {
+                    Err(AddressError::InvalidPort)
+                }
+            } else {
+                Ok(Address::from_host(address))
+            }
         } else {
             Err(AddressError::InvalidFormat)
         }
@@ -213,6 +226,7 @@ mod tests {
     fn test_address_parse() {
         assert_eq!("a".parse(), Ok(Address::from_host("a")));
         assert_eq!("a:1234".parse(), Ok(Address::new("a", 1234)));
+        assert_eq!("".parse::<Address>(), Err(AddressError::InvalidFormat));
         assert_eq!("a:b".parse::<Address>(), Err(AddressError::InvalidPort));
         assert_eq!(
             "a:1234:5678".parse::<Address>(),
