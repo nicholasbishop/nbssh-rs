@@ -61,8 +61,21 @@ impl Address {
         }
     }
 
+    /// Get the port number as a string.
+    pub fn port_str(&self) -> String {
+        if let Some(port) = self.port {
+            port.to_string()
+        } else {
+            String::new()
+        }
+    }
+}
+
+impl std::str::FromStr for Address {
+    type Err = AddressError;
+
     /// Parse an address in "host[:port]" format.
-    pub fn parse(address: &str) -> Result<Address, AddressError> {
+    fn from_str(address: &str) -> Result<Self, Self::Err> {
         let parts: Vec<&str> = address.split(':').collect();
         if parts.len() == 2 {
             if let Ok(port) = parts[1].parse() {
@@ -74,15 +87,6 @@ impl Address {
             Ok(Address::from_host(address))
         } else {
             Err(AddressError::InvalidFormat)
-        }
-    }
-
-    /// Get the port number as a string.
-    pub fn port_str(&self) -> String {
-        if let Some(port) = self.port {
-            port.to_string()
-        } else {
-            String::new()
         }
     }
 }
@@ -100,7 +104,7 @@ impl<'de> de::Visitor<'de> for AddressVisitor {
     where
         E: de::Error,
     {
-        match Address::parse(value) {
+        match value.parse::<Address>() {
             Ok(addr) => Ok(addr),
             Err(AddressError::InvalidFormat) => {
                 Err(E::custom("invalid address format"))
@@ -216,11 +220,11 @@ mod tests {
 
     #[test]
     fn test_address_parse() {
-        assert_eq!(Address::parse("a"), Ok(Address::from_host("a")));
-        assert_eq!(Address::parse("a:1234"), Ok(Address::new("a", 1234)));
-        assert_eq!(Address::parse("a:b"), Err(AddressError::InvalidPort));
+        assert_eq!("a".parse(), Ok(Address::from_host("a")));
+        assert_eq!("a:1234".parse(), Ok(Address::new("a", 1234)));
+        assert_eq!("a:b".parse::<Address>(), Err(AddressError::InvalidPort));
         assert_eq!(
-            Address::parse("a:1234:5678"),
+            "a:1234:5678".parse::<Address>(),
             Err(AddressError::InvalidFormat)
         );
     }
@@ -242,7 +246,7 @@ mod tests {
     #[test]
     fn test_command() {
         let target = SshParams {
-            address: Address::parse("localhost:9222").unwrap(),
+            address: "localhost:9222".parse().unwrap(),
             identity: Some(Path::new("/myIdentity").to_path_buf()),
             user: Some("me".to_string()),
             strict_host_key_checking: false,
