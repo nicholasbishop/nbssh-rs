@@ -60,15 +60,6 @@ impl Address {
             port: None,
         }
     }
-
-    /// Get the port number as a string.
-    pub fn port_str(&self) -> String {
-        if let Some(port) = self.port {
-            port.to_string()
-        } else {
-            String::new()
-        }
-    }
 }
 
 impl std::str::FromStr for Address {
